@@ -1,0 +1,411 @@
+{
+  "info": {
+    "name": "Wound_IQ REST API",
+    "description": "Complete API collection for Wound_IQ wound assessment management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "patient_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "clinician_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "assessment_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Check API Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/patients?page=1&page_size=10",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients", "{{patient_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe\",\n  \"date_of_birth\": \"1985-06-15T00:00:00Z\",\n  \"gender\": \"Male\",\n  \"medical_record_number\": \"MRN123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/patients",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Jane Doe\",\n  \"gender\": \"Female\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients", "{{patient_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients", "{{patient_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient Wound History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/patients/{{patient_id}}/history",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "patients", "{{patient_id}}", "history"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Clinicians",
+      "item": [
+        {
+          "name": "Get All Clinicians",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/clinicians?page=1&page_size=10",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "clinicians"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Clinician by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/clinicians/{{clinician_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "clinicians", "{{clinician_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Clinician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Dr. Sarah Johnson\",\n  \"role\": \"Physician\",\n  \"department\": \"Wound Care\",\n  \"contact_info\": \"555-1234\",\n  \"license_number\": \"LIC12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/clinicians",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "clinicians"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Clinician",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact_info\": \"555-5678\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/clinicians/{{clinician_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "clinicians", "{{clinician_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Clinician",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/clinicians/{{clinician_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "clinicians", "{{clinician_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Assessments",
+      "item": [
+        {
+          "name": "Get All Assessments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/assessments?page=1&page_size=10",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                },
+                {
+                  "key": "patient_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "clinician_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31T23:59:59Z",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Assessment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/assessments/{{assessment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments", "{{assessment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Simple Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clinician_id\": 1,\n  \"patient_id\": 1,\n  \"location\": \"Left Heel\",\n  \"etiology\": \"Pressure Injury\",\n  \"depth_of_injury\": \"Partial Thickness\",\n  \"stage\": \"Stage II\",\n  \"chronicity\": \"Acute\",\n  \"healing_status\": \"Improving\",\n  \"return_to_clinic\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Full Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clinician_id\": 1,\n  \"patient_id\": 1,\n  \"location\": \"Right Foot\",\n  \"etiology\": \"Diabetic Ulcer\",\n  \"depth_of_injury\": \"Full Thickness\",\n  \"stage\": \"Stage III\",\n  \"chronicity\": \"Chronic\",\n  \"healing_status\": \"Slow Healing\",\n  \"return_to_clinic\": true,\n  \"infection_pain\": {\n    \"localized_symptoms\": \"Redness\",\n    \"systemic_symptoms\": \"None\",\n    \"pain_present\": \"Yes\",\n    \"pain_score\": \"5\",\n    \"culture_results\": \"Negative\",\n    \"antibiotic\": \"None\"\n  },\n  \"tissue_status\": {\n    \"granulation_percent\": 50,\n    \"epithelial_percent\": 20,\n    \"slough_percent\": 20,\n    \"eschar_percent\": 5,\n    \"necrotic_percent\": 5,\n    \"debridement\": \"Sharp\"\n  },\n  \"vitals\": {\n    \"blood_pressure\": \"130/85\",\n    \"temperature\": 37.2,\n    \"pulse\": 75,\n    \"respiration_rate\": 16,\n    \"oxygen_saturation\": 97\n  },\n  \"wound_condition\": {\n    \"length\": 3.5,\n    \"width\": 2.8,\n    \"depth\": 0.8,\n    \"tunneling\": false,\n    \"undermining\": true,\n    \"edges\": \"Attached\",\n    \"skin_condition\": \"Dry\",\n    \"edema\": \"Mild\",\n    \"blister\": \"No\"\n  },\n  \"exudate\": {\n    \"exudate_type\": \"Serous\",\n    \"exudate_amount\": \"Moderate\",\n    \"odor\": \"None\"\n  },\n  \"treatment\": {\n    \"primary_dressing\": \"Foam\",\n    \"secondary_dressing\": \"Gauze\",\n    \"tertiary_dressing\": \"Wrap\",\n    \"frequency\": \"Daily\",\n    \"supplies\": \"Saline, dressing pack\",\n    \"orders\": \"Monitor glucose\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/assessments/full",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments", "full"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Assessment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"healing_status\": \"Healed\",\n  \"return_to_clinic\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/assessments/{{assessment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments", "{{assessment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Assessment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/assessments/{{assessment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments", "{{assessment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Full Assessment Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/assessments/{{assessment_id}}/full",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "assessments", "{{assessment_id}}", "full"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
