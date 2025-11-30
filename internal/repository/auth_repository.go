@@ -171,14 +171,17 @@ func (r *AuthRepository) GetUserByID(userID int) (*models.User, error) {
 // ------------------------------------------------------------
 // GET USER WITH PROFILE (PATIENT / CLINICIAN)
 // ------------------------------------------------------------
+// GetUserWithProfile - UPDATED VERSION
 func (r *AuthRepository) GetUserWithProfile(userID int) (*models.UserWithProfile, error) {
 	var profile models.UserWithProfile
 
+	// Get basic user info from users table
 	user, err := r.GetUserByID(userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
+	// Fill basic user info
 	profile.ID = user.ID
 	profile.Email = user.Email
 	profile.Role = user.Role
@@ -187,25 +190,44 @@ func (r *AuthRepository) GetUserWithProfile(userID int) (*models.UserWithProfile
 	profile.CreatedAt = user.CreatedAt
 	profile.UpdatedAt = user.UpdatedAt
 
+	// Fetch role-specific profile data
+	var firstName, lastName sql.NullString
+
 	switch user.Role {
 	case "patient":
 		err = r.db.QueryRow(`
 			SELECT first_name, last_name
 			FROM Patient
 			WHERE user_id = $1
-		`, userID).Scan(&profile.FirstName, &profile.LastName)
+		`, userID).Scan(&firstName, &lastName)
+
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("patient profile not found for user_id %d", userID)
+		}
 
 	case "clinician":
 		err = r.db.QueryRow(`
 			SELECT first_name, last_name
 			FROM Clinician
 			WHERE user_id = $1
-		`, userID).Scan(&profile.FirstName, &profile.LastName)
+		`, userID).Scan(&firstName, &lastName)
+
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("clinician profile not found for user_id %d", userID)
+		}
+
+	default:
+		return nil, fmt.Errorf("unknown role: %s", user.Role)
 	}
 
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
+	// Handle any other database errors
+	if err != nil {
+		return nil, fmt.Errorf("error fetching profile: %w", err)
 	}
+
+	// Set names (handle NULL values)
+	profile.FirstName = firstName.String
+	profile.LastName = lastName.String
 
 	return &profile, nil
 }

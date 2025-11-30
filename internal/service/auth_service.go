@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/models"
@@ -32,7 +34,7 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.LoginRespons
 		return nil, utils.ErrEmailExists
 	}
 
-	// Create user
+	// Create user (this creates both user and profile records)
 	user, err := s.authRepo.CreateUser(
 		req.Email,
 		req.Password,
@@ -61,10 +63,10 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.LoginRespons
 		return nil, err
 	}
 
-	// Get user profile
+	// Get user profile (should always succeed since we just created it)
 	profile, err := s.authRepo.GetUserWithProfile(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user created but profile fetch failed: %w", err)
 	}
 
 	return &models.LoginResponse{
@@ -75,45 +77,88 @@ func (s *AuthService) Register(req models.RegisterRequest) (*models.LoginRespons
 }
 
 // Login authenticates a user and returns tokens
+// Authentication uses ONLY the users table
+// Profile is fetched separately for display purposes
 func (s *AuthService) Login(req models.LoginRequest) (*models.LoginResponse, error) {
-	// Get user by email
+
+	log.Printf("[AUTH] Login attempt for email: %s", req.Email)
+
+	// ============================================================
+	// AUTHENTICATION PHASE - Uses ONLY users table
+	// ============================================================
+
+	// Step 1: Get user by email from users table
 	user, err := s.authRepo.GetUserByEmail(req.Email)
 	if err != nil {
+		log.Printf("[AUTH] Login failed: User not found - %s", req.Email)
 		return nil, utils.ErrInvalidCredentials
 	}
 
-	// Check if user is active
+	log.Printf("[AUTH] User found: ID=%d, Email=%s, Role=%s", user.ID, user.Email, user.Role)
+
+	// Step 2: Check if user is active
 	if !user.IsActive {
+		log.Printf("[AUTH] Login failed: User inactive - %s", req.Email)
 		return nil, utils.ErrUserInactive
 	}
 
-	// Verify password
+	// Step 3: Verify password
 	if !utils.CheckPassword(req.Password, user.PasswordHash) {
+		log.Printf("[AUTH] Login failed: Invalid password - %s", req.Email)
 		return nil, utils.ErrInvalidCredentials
 	}
 
-	// Generate tokens
+	log.Printf("[AUTH] ✅ Authentication successful for user: %s", req.Email)
+
+	// ============================================================
+	// AUTHENTICATION COMPLETE
+	// Everything below uses authenticated user info
+	// ============================================================
+
+	// Step 4: Generate tokens
 	accessToken, err := utils.GenerateAccessToken(user.ID, user.Email, user.Role)
 	if err != nil {
-		return nil, err
+		log.Printf("[AUTH] Failed to generate access token: %v", err)
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
 	refreshToken, err := utils.GenerateRefreshToken(user.ID)
 	if err != nil {
-		return nil, err
+		log.Printf("[AUTH] Failed to generate refresh token: %v", err)
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	// Save refresh token
+	// Step 5: Save refresh token
 	expiresAt := time.Now().Add(utils.RefreshTokenExpiry)
 	if err := s.authRepo.SaveRefreshToken(user.ID, refreshToken, expiresAt); err != nil {
-		return nil, err
+		log.Printf("[AUTH] Warning: Failed to save refresh token: %v", err)
+		// Continue anyway - user can still use access token
 	}
 
-	// Get user profile
+	// ============================================================
+	// PROFILE FETCHING - Separate from authentication
+	// ============================================================
+
+	// Step 6: Fetch profile from clinicians/patients table
+	log.Printf("[AUTH] Fetching profile for user: %d", user.ID)
 	profile, err := s.authRepo.GetUserWithProfile(user.ID)
 	if err != nil {
-		return nil, err
+		// This is a DATA INTEGRITY issue - user exists but no profile
+		log.Printf("[AUTH] ❌ ERROR: User %d (%s) has no profile in %s table!",
+			user.ID, user.Email, user.Role)
+		log.Printf("[AUTH] This indicates a data integrity problem")
+
+		// Return error with helpful message
+		return nil, fmt.Errorf(
+			"authentication successful but profile not found - "+
+				"user_id %d exists in users table but has no matching record in %s table. "+
+				"Please contact administrator",
+			user.ID, user.Role,
+		)
 	}
+
+	log.Printf("[AUTH] ✅ Profile fetched: %s %s", profile.FirstName, profile.LastName)
+	log.Printf("[AUTH] ✅ Login complete for: %s", req.Email)
 
 	return &models.LoginResponse{
 		User:         *profile,
@@ -162,10 +207,10 @@ func (s *AuthService) RefreshToken(refreshToken string) (*models.LoginResponse, 
 		return nil, err
 	}
 
-	// Get user profile
+	// Get user profile (required)
 	profile, err := s.authRepo.GetUserWithProfile(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user exists but profile not found: %w", err)
 	}
 
 	return &models.LoginResponse{
@@ -182,7 +227,7 @@ func (s *AuthService) Logout(userID int) error {
 
 // ChangePassword changes user password
 func (s *AuthService) ChangePassword(userID int, req models.ChangePasswordRequest) error {
-	// Get user
+	// Get user from users table only
 	user, err := s.authRepo.GetUserByID(userID)
 	if err != nil {
 		return err
@@ -198,11 +243,16 @@ func (s *AuthService) ChangePassword(userID int, req models.ChangePasswordReques
 		return err
 	}
 
-	// Update password
+	// Update password in users table
 	return s.authRepo.UpdatePassword(userID, req.NewPassword)
 }
 
 // GetUserProfile gets user profile by ID
+// This is used by the /profile endpoint
 func (s *AuthService) GetUserProfile(userID int) (*models.UserWithProfile, error) {
-	return s.authRepo.GetUserWithProfile(userID)
+	profile, err := s.authRepo.GetUserWithProfile(userID)
+	if err != nil {
+		return nil, fmt.Errorf("profile not found for user %d: %w", userID, err)
+	}
+	return profile, nil
 }
