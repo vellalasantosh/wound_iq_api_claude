@@ -60,6 +60,7 @@ func main() {
 	r := router.SetupRouter(database)
 
 	// Attach Auth Routes under unified /api/v1
+	log.Println("Registering auth routes...")
 	v1 := r.Group("/api/v1")
 	routes.SetupAuthRoutes(v1, authHandler)
 
