@@ -12,13 +12,13 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/vellalasantosh/wound_iq_api_claud/internal/service"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/config"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/repository"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/router"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/service"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/utils"
 )
 
