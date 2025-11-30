@@ -12,7 +12,12 @@ import (
 
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/config"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/repository"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/router"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/service"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/utils"
 
 	"github.com/joho/godotenv"
 )
@@ -23,11 +28,21 @@ func main() {
 		log.Printf("Warning: .env file not found, using environment variables")
 	}
 
+	log.Println("DEBUG — JWT_SECRET from env:", os.Getenv("JWT_SECRET"))
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+
+	// ============ NEW: Set JWT Secret ============
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	utils.SetJWTSecret(jwtSecret)
+	// =============================================
 
 	// Initialize database connection
 	database, err := db.NewPostgresDB(cfg.DBDSN)
@@ -38,8 +53,19 @@ func main() {
 
 	log.Println("Successfully connected to PostgreSQL database")
 
+	// ============ NEW: Initialize Auth Components ============
+	authRepo := repository.NewAuthRepository(database.DB)
+	authService := service.NewAuthService(authRepo)
+	authHandler := handlers.NewAuthHandler(authService)
+	// =========================================================
+
 	// Initialize router with database connection
 	r := router.SetupRouter(database)
+
+	// ============ NEW: Setup Auth Routes ============
+	v1 := r.Group("/api/v1")
+	routes.SetupAuthRoutes(v1, authHandler)
+	// ================================================
 
 	// Configure server
 	srv := &http.Server{
