@@ -13,7 +13,6 @@ import (
 func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine {
 
 	r := gin.New()
-
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(corsMiddleware())
@@ -35,7 +34,7 @@ func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine
 	// Unified API root
 	v1 := r.Group("/api/v1")
 
-	// ⭐ AUTH ROUTES — defined inline (no import from routes)
+	// ⭐ AUTH ROUTES
 	auth := v1.Group("/auth")
 	{
 		auth.POST("/register", authHandler.Register)
