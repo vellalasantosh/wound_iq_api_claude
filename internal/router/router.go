@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
-	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/middleware"
 )
 
 func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine {
@@ -35,8 +35,21 @@ func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine
 	// Unified API root
 	v1 := r.Group("/api/v1")
 
-	// ⭐ Attach AUTH ROUTES HERE
-	routes.SetupAuthRoutes(v1, authHandler)
+	// ⭐ AUTH ROUTES — defined inline (no import from routes)
+	auth := v1.Group("/auth")
+	{
+		auth.POST("/register", authHandler.Register)
+		auth.POST("/login", authHandler.Login)
+		auth.POST("/refresh", authHandler.RefreshToken)
+
+		protected := auth.Group("")
+		protected.Use(middleware.AuthMiddleware())
+		{
+			protected.POST("/logout", authHandler.Logout)
+			protected.GET("/profile", authHandler.GetProfile)
+			protected.POST("/change-password", authHandler.ChangePassword)
+		}
+	}
 
 	// Patients
 	patients := v1.Group("/patients")
