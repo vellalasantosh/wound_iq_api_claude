@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
-	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
 )
 
-// SetupRouter configures all routes and middleware
+// SetupRouter configures all routes and middleware EXCEPT auth routes
 func SetupRouter(database *db.DB) *gin.Engine {
 
 	r := gin.New()
@@ -37,10 +36,9 @@ func SetupRouter(database *db.DB) *gin.Engine {
 	// ⭐ Unified API v1 routes: /api/v1
 	v1 := r.Group("/api/v1")
 
-	// Attach Auth routes (from your new auth module)
-	routes.SetupAuthRoutes(v1, handlers.NewAuthHandler(nil)) // Updated in main.go with real dependency
-
-	// ----- Patient routes -----
+	// ---------------------------
+	// Patient routes
+	// ---------------------------
 	patients := v1.Group("/patients")
 	{
 		patients.GET("", patientHandler.GetAllPatients)
@@ -51,7 +49,9 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		patients.GET("/:id/history", reportHandler.GetPatientWoundHistory)
 	}
 
-	// ----- Clinician routes -----
+	// ---------------------------
+	// Clinician routes
+	// ---------------------------
 	clinicians := v1.Group("/clinicians")
 	{
 		clinicians.GET("", clinicianHandler.GetAllClinicians)
@@ -61,7 +61,9 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		clinicians.DELETE("/:id", clinicianHandler.DeleteClinician)
 	}
 
-	// ----- Assessment routes -----
+	// ---------------------------
+	// Assessment routes
+	// ---------------------------
 	assessments := v1.Group("/assessments")
 	{
 		assessments.GET("", assessmentHandler.GetAllAssessments)
@@ -73,7 +75,7 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		assessments.GET("/:id/full", reportHandler.GetFullAssessment)
 	}
 
-	// 404 handler
+	// 404 NOT FOUND handler
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "Route not found",
