@@ -4,16 +4,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
-
-	"github.com/gin-gonic/gin"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
 )
 
 // SetupRouter configures all routes and middleware
 func SetupRouter(database *db.DB) *gin.Engine {
-	// Set Gin to release mode for production
-	// gin.SetMode(gin.ReleaseMode) // Uncomment in production
 
 	r := gin.New()
 
@@ -36,41 +34,43 @@ func SetupRouter(database *db.DB) *gin.Engine {
 	assessmentHandler := handlers.NewAssessmentHandler(database)
 	reportHandler := handlers.NewReportHandler(database)
 
-	// API v1 routes
-	v1 := r.Group("/v1")
+	// ⭐ Unified API v1 routes: /api/v1
+	v1 := r.Group("/api/v1")
+
+	// Attach Auth routes (from your new auth module)
+	routes.SetupAuthRoutes(v1, handlers.NewAuthHandler(nil)) // Updated in main.go with real dependency
+
+	// ----- Patient routes -----
+	patients := v1.Group("/patients")
 	{
-		// Patient routes
-		patients := v1.Group("/patients")
-		{
-			patients.GET("", patientHandler.GetAllPatients)
-			patients.GET("/:id", patientHandler.GetPatientByID)
-			patients.POST("", patientHandler.CreatePatient)
-			patients.PUT("/:id", patientHandler.UpdatePatient)
-			patients.DELETE("/:id", patientHandler.DeletePatient)
-			patients.GET("/:id/history", reportHandler.GetPatientWoundHistory)
-		}
+		patients.GET("", patientHandler.GetAllPatients)
+		patients.GET("/:id", patientHandler.GetPatientByID)
+		patients.POST("", patientHandler.CreatePatient)
+		patients.PUT("/:id", patientHandler.UpdatePatient)
+		patients.DELETE("/:id", patientHandler.DeletePatient)
+		patients.GET("/:id/history", reportHandler.GetPatientWoundHistory)
+	}
 
-		// Clinician routes
-		clinicians := v1.Group("/clinicians")
-		{
-			clinicians.GET("", clinicianHandler.GetAllClinicians)
-			clinicians.GET("/:id", clinicianHandler.GetClinicianByID)
-			clinicians.POST("", clinicianHandler.CreateClinician)
-			clinicians.PUT("/:id", clinicianHandler.UpdateClinician)
-			clinicians.DELETE("/:id", clinicianHandler.DeleteClinician)
-		}
+	// ----- Clinician routes -----
+	clinicians := v1.Group("/clinicians")
+	{
+		clinicians.GET("", clinicianHandler.GetAllClinicians)
+		clinicians.GET("/:id", clinicianHandler.GetClinicianByID)
+		clinicians.POST("", clinicianHandler.CreateClinician)
+		clinicians.PUT("/:id", clinicianHandler.UpdateClinician)
+		clinicians.DELETE("/:id", clinicianHandler.DeleteClinician)
+	}
 
-		// Assessment routes
-		assessments := v1.Group("/assessments")
-		{
-			assessments.GET("", assessmentHandler.GetAllAssessments)
-			assessments.GET("/:id", assessmentHandler.GetAssessmentByID)
-			assessments.POST("", assessmentHandler.CreateAssessment)
-			assessments.POST("/full", assessmentHandler.CreateFullAssessment)
-			assessments.PUT("/:id", assessmentHandler.UpdateAssessment)
-			assessments.DELETE("/:id", assessmentHandler.DeleteAssessment)
-			assessments.GET("/:id/full", reportHandler.GetFullAssessment)
-		}
+	// ----- Assessment routes -----
+	assessments := v1.Group("/assessments")
+	{
+		assessments.GET("", assessmentHandler.GetAllAssessments)
+		assessments.GET("/:id", assessmentHandler.GetAssessmentByID)
+		assessments.POST("", assessmentHandler.CreateAssessment)
+		assessments.POST("/full", assessmentHandler.CreateFullAssessment)
+		assessments.PUT("/:id", assessmentHandler.UpdateAssessment)
+		assessments.DELETE("/:id", assessmentHandler.DeleteAssessment)
+		assessments.GET("/:id/full", reportHandler.GetFullAssessment)
 	}
 
 	// 404 handler
@@ -84,13 +84,15 @@ func SetupRouter(database *db.DB) *gin.Engine {
 	return r
 }
 
-// corsMiddleware adds CORS headers
+// CORS middleware
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+		c.Writer.Header().Set("Access-Control-Allow-Headers",
+			"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods",
+			"POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
