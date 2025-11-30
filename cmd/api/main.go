@@ -17,7 +17,6 @@ import (
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/repository"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/router"
-	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/service"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/utils"
 )
@@ -57,12 +56,12 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 
 	// Initialize Router
-	r := router.SetupRouter(database)
+	r := router.SetupRouter(database, authHandler)
 
 	// Attach Auth Routes under unified /api/v1
-	log.Println("Registering auth routes...")
-	v1 := r.Group("/api/v1")
-	routes.SetupAuthRoutes(v1, authHandler)
+	// log.Println("Registering auth routes...")
+	// v1 := r.Group("/api/v1")
+	// routes.SetupAuthRoutes(v1, authHandler)
 
 	// Configure HTTP Server
 	srv := &http.Server{

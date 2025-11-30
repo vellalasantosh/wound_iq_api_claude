@@ -7,19 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/db"
 	"github.com/vellalasantosh/wound_iq_api_claude/internal/handlers"
+	"github.com/vellalasantosh/wound_iq_api_claude/internal/routes"
 )
 
-// SetupRouter configures all routes and middleware EXCEPT auth routes
-func SetupRouter(database *db.DB) *gin.Engine {
+func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine {
 
 	r := gin.New()
 
-	// Middleware
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(corsMiddleware())
 
-	// Health check endpoint
+	// Health
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
@@ -27,18 +26,19 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		})
 	})
 
-	// Initialize handlers
+	// Handlers
 	patientHandler := handlers.NewPatientHandler(database)
 	clinicianHandler := handlers.NewClinicianHandler(database)
 	assessmentHandler := handlers.NewAssessmentHandler(database)
 	reportHandler := handlers.NewReportHandler(database)
 
-	// ⭐ Unified API v1 routes: /api/v1
+	// Unified API root
 	v1 := r.Group("/api/v1")
 
-	// ---------------------------
-	// Patient routes
-	// ---------------------------
+	// ⭐ Attach AUTH ROUTES HERE
+	routes.SetupAuthRoutes(v1, authHandler)
+
+	// Patients
 	patients := v1.Group("/patients")
 	{
 		patients.GET("", patientHandler.GetAllPatients)
@@ -49,9 +49,7 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		patients.GET("/:id/history", reportHandler.GetPatientWoundHistory)
 	}
 
-	// ---------------------------
-	// Clinician routes
-	// ---------------------------
+	// Clinicians
 	clinicians := v1.Group("/clinicians")
 	{
 		clinicians.GET("", clinicianHandler.GetAllClinicians)
@@ -61,9 +59,7 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		clinicians.DELETE("/:id", clinicianHandler.DeleteClinician)
 	}
 
-	// ---------------------------
-	// Assessment routes
-	// ---------------------------
+	// Assessments
 	assessments := v1.Group("/assessments")
 	{
 		assessments.GET("", assessmentHandler.GetAllAssessments)
@@ -75,7 +71,7 @@ func SetupRouter(database *db.DB) *gin.Engine {
 		assessments.GET("/:id/full", reportHandler.GetFullAssessment)
 	}
 
-	// 404 NOT FOUND handler
+	// 404
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "Route not found",
