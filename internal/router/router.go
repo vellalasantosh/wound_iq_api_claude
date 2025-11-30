@@ -20,7 +20,7 @@ func SetupRouter(database *db.DB, authHandler *handlers.AuthHandler) *gin.Engine
 	// Health
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"status":    "healthy",
+			"status":    "superhealthy",
 			"timestamp": time.Now().Format(time.RFC3339),
 		})
 	})
